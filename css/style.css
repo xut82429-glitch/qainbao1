@@ -1,0 +1,250 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 20px;
+}
+
+#app {
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.start-screen {
+    background: white;
+    border-radius: 16px;
+    padding: 40px 30px;
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+}
+
+.start-screen h1 {
+    font-size: 32px;
+    color: #667eea;
+    margin-bottom: 10px;
+}
+
+.start-screen h2 {
+    font-size: 24px;
+    color: #764ba2;
+    margin-bottom: 20px;
+}
+
+.subtitle {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 30px;
+}
+
+.tasks {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 30px;
+    text-align: left;
+}
+
+.tasks ul {
+    margin-top: 15px;
+    padding-left: 20px;
+}
+
+.tasks li {
+    margin: 8px 0;
+    color: #444;
+}
+
+.buttons {
+    display: flex;
+    gap: 10px;
+    flex-direction: column;
+}
+
+button {
+    border: none;
+    border-radius: 10px;
+    padding: 14px 24px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-weight: bold;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+    background: #f0f0f0;
+    color: #333;
+}
+
+.btn-secondary:hover {
+    background: #e0e0e0;
+}
+
+.scene {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+}
+
+.header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.header h3 {
+    color: white;
+    font-size: 18px;
+}
+
+.btn-back {
+    background: rgba(255,255,255,0.2);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 8px;
+}
+
+.btn-inventory {
+    background: rgba(255,255,255,0.2);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 8px;
+}
+
+.scene-content {
+    padding: 30px 20px;
+}
+
+.task-box {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.task-box h4 {
+    color: #667eea;
+    margin-bottom: 10px;
+}
+
+.btn-task {
+    background: #667eea;
+    color: white;
+    width: 100%;
+    margin-top: 15px;
+}
+
+.nav-buttons {
+    margin-top: 20px;
+}
+
+.btn-nav {
+    background: #764ba2;
+    color: white;
+    width: 100%;
+}
+
+.map-grid {
+    padding: 30px 20px;
+    display: grid;
+    gap: 15px;
+}
+
+.map-node {
+    background: #f0f0f0;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.map-node.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.map-node.active:hover {
+    transform: translateY(-2px);
+}
+
+.map-node.locked {
+    color: #999;
+    cursor: not-allowed;
+}
+
+.inventory-modal {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+}
+
+.inv-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.inv-header h3 {
+    color: #667eea;
+}
+
+.btn-close {
+    background: #f0f0f0;
+    padding: 8px 14px;
+    border-radius: 8px;
+}
+
+.inv-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.inv-slot {
+    aspect-ratio: 1;
+    background: #f8f9fa;
+    border: 2px dashed #ddd;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+}
+
+.inv-slot.filled {
+    border: 2px solid #667eea;
+    background: #f0f4ff;
+    cursor: pointer;
+}
+
+.inv-slot.filled:hover {
+    background: #e0e8ff;
+}
+
+.inv-tip {
+    text-align: center;
+    color: #888;
+    font-size: 14px;
+}
