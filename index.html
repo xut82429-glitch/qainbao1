@@ -1,0 +1,1692 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>谣言终结者·清朗特工</title>
+  <link rel="stylesheet" href="assets/styles/main.css">
+  <style>
+    /* 完整的背包系统样式 */
+    .inventory-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      padding: 20px;
+    }
+    
+    .inventory-modal.show {
+      display: flex;
+      animation: fadeIn 0.3s;
+    }
+    
+    .inventory-panel {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      max-width: 450px;
+      width: 100%;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    
+    .inventory-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    
+    .inventory-title {
+      font-size: 24px;
+      font-weight: bold;
+      color: #667eea;
+    }
+    
+    .close-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #f0f4ff;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+    }
+    
+    .item-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    
+    .item-slot {
+      aspect-ratio: 1;
+      background: linear-gradient(135deg, #f0f4ff 0%, #e0e8ff 100%);
+      border: 2px solid #c0c8e8;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .item-slot:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+      border-color: #667eea;
+    }
+    
+    .item-slot.has-item {
+      background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+      border-color: #f5576c;
+    }
+    
+    .item-icon {
+      font-size: 40px;
+      margin-bottom: 6px;
+    }
+    
+    .item-count {
+      font-size: 12px;
+      color: #888;
+      font-weight: bold;
+    }
+    
+    .item-detail-panel {
+      background: linear-gradient(135deg, #f0f4ff 0%, #e8f4ff 100%);
+      border-radius: 16px;
+      padding: 20px;
+      margin-top: 20px;
+      display: none;
+    }
+    
+    .item-detail-panel.show {
+      display: block;
+      animation: slideUp 0.3s;
+    }
+    
+    .item-detail-name {
+      font-size: 20px;
+      font-weight: bold;
+      color: #667eea;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .item-detail-desc {
+      color: #666;
+      margin-bottom: 16px;
+      line-height: 1.6;
+    }
+    
+    .use-btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .use-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    /* 选择对话框样式 */
+    .choice-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2500;
+      padding: 20px;
+    }
+    
+    .choice-modal.show {
+      display: flex;
+      animation: fadeIn 0.3s;
+    }
+    
+    .choice-panel {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      max-width: 420px;
+      width: 100%;
+    }
+    
+    .choice-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    
+    .choice-icon {
+      font-size: 50px;
+      margin-bottom: 12px;
+    }
+    
+    .choice-question {
+      font-size: 18px;
+      font-weight: bold;
+      color: #333;
+    }
+    
+    .choice-options {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .choice-option {
+      padding: 16px 20px;
+      border: 2px solid #e0e8ff;
+      border-radius: 12px;
+      background: white;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-align: left;
+      font-size: 15px;
+    }
+    
+    .choice-option:hover {
+      border-color: #667eea;
+      background: #f0f4ff;
+      transform: translateX(5px);
+    }
+    
+    .choice-option.correct {
+      border-color: #4ade80;
+      background: #e8f5e9;
+    }
+    
+    .choice-option.wrong {
+      border-color: #f5576c;
+      background: #ffebee;
+    }
+    
+    /* 小背包按钮 */
+    .inventory-btn {
+      position: fixed;
+      bottom: 85px;
+      right: 20px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      font-size: 28px;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+    
+    .inventory-count {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background: #f5576c;
+      color: white;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      font-size: 12px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    /* 道具使用后效果 */
+    .hint-popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+      padding: 30px 40px;
+      border-radius: 16px;
+      text-align: center;
+      z-index: 3000;
+      display: none;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    }
+    
+    .hint-popup.show {
+      display: block;
+      animation: popIn 0.4s ease;
+    }
+    
+    @keyframes popIn {
+      0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+      100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    }
+    
+    /* 响应式优化 */
+    @media (max-width: 480px) {
+      .game-container { padding: 12px; }
+      .post-card { padding: 16px; border-radius: 12px; }
+      .btn { padding: 12px 20px; font-size: 15px; }
+    }
+    
+    @media (min-width: 768px) {
+      .game-container { max-width: 720px; margin: 0 auto; }
+      .scene-map { max-width: 680px; margin: 0 auto; }
+    }
+    
+    /* 新闻站点样式 */
+    .news-article {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+      border-left: 4px solid #ddd;
+      transition: all 0.3s;
+    }
+    
+    .news-article.fake-news { border-left-color: #f5576c; }
+    .news-article.clickbait { border-left-color: #ffa502; }
+    .news-article.real { border-left-color: #4ade80; }
+    
+    .news-header {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    
+    .news-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 12px;
+      line-height: 1.5;
+    }
+    
+    .news-content {
+      color: #444;
+      line-height: 1.7;
+      margin-bottom: 16px;
+    }
+    
+    .warning-zone {
+      background: #fff3cd;
+      border-radius: 8px;
+      padding: 12px;
+      margin: 12px 0;
+      border-left: 3px solid #ffc107;
+    }
+    
+    /* BOSS战样式 */
+    .boss-arena {
+      background: linear-gradient(180deg, #1a1a2e, #16213e);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .boss-container {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    
+    .boss-avatar {
+      width: 180px;
+      height: 180px;
+      background: linear-gradient(135deg, #f093fb, #f5576c);
+      border-radius: 50%;
+      margin: 0 auto 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 100px;
+      box-shadow: 0 0 50px rgba(240, 147, 251, 0.4);
+      animation: bossFloat 2s ease-in-out infinite;
+    }
+    
+    @keyframes bossFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-15px); }
+    }
+    
+    .hp-bar-container {
+      background: rgba(0,0,0,0.5);
+      border-radius: 10px;
+      height: 24px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+    
+    .hp-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #4ade80, #667eea);
+      transition: width 0.5s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: white;
+      font-size: 14px;
+    }
+    
+    .attack-zone {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    
+    .attack-card {
+      background: rgba(255,255,255,0.1);
+      border: 2px solid rgba(255,255,255,0.2);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .attack-card:hover {
+      border-color: #667eea;
+      background: rgba(102, 126, 234, 0.2);
+      transform: translateY(-3px);
+    }
+    
+    .attack-icon {
+      font-size: 36px;
+      margin-bottom: 8px;
+    }
+    
+    .attack-name {
+      color: white;
+      font-weight: bold;
+    }
+    
+    .combat-log {
+      background: rgba(0,0,0,0.5);
+      border-radius: 12px;
+      padding: 16px;
+      max-height: 200px;
+      overflow-y: auto;
+      color: #aaa;
+      font-size: 14px;
+    }
+    
+    .log-entry {
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .damaged {
+      animation: damageFlash 0.3s ease-in-out 2;
+    }
+    
+    @keyframes damageFlash {
+      0%, 100% { filter: brightness(1); }
+      50% { filter: brightness(2); }
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container" class="game-container"></div>
+  
+  <!-- 背包按钮 -->
+  <button class="inventory-btn" id="inventoryBtn" onclick="openInventory()" style="display: none;">
+    🎒
+    <span class="inventory-count" id="inventoryCount">0</span>
+  </button>
+  
+  <!-- 背包弹窗 -->
+  <div class="inventory-modal" id="inventoryModal">
+    <div class="inventory-panel">
+      <div class="inventory-header">
+        <div class="inventory-title">🎒 特工背包</div>
+        <button class="close-btn" onclick="closeInventory()">✕</button>
+      </div>
+      
+      <div style="background: #fff3cd; border-radius: 10px; padding: 14px; margin-bottom: 16px;">
+        <strong style="color: #856404;">📖 使用说明：</strong>
+        <p style="color: #666; font-size: 13px; margin-top: 6px;">
+          点击道具可以查看详细说明，选择"使用"来激活道具效果。
+          不同道具有不同用途，在合适的场景使用！
+        </p>
+      </div>
+      
+      <div class="item-grid" id="itemGrid"></div>
+      
+      <div class="item-detail-panel" id="itemDetail">
+        <div class="item-detail-name" id="detailName">
+          <span id="detailIcon">📜</span>
+          <span id="detailTitle">道具名称</span>
+        </div>
+        <p class="item-detail-desc" id="detailDesc">道具详细说明</p>
+        <button class="use-btn" id="useItemBtn" onclick="useSelectedItem()">
+          ✨ 使用道具
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 选择对话框 -->
+  <div class="choice-modal" id="choiceModal">
+    <div class="choice-panel">
+      <div class="choice-header">
+        <div class="choice-icon" id="choiceIcon">🔍</div>
+        <div class="choice-question" id="choiceQuestion">请选择你的答案</div>
+      </div>
+      <div class="choice-options" id="choiceOptions"></div>
+      <button class="btn btn-secondary" style="margin-top: 20px; width: 100%;" onclick="closeChoice()">
+        取消
+      </button>
+    </div>
+  </div>
+  
+  <!-- 提示弹窗 -->
+  <div class="hint-popup" id="hintPopup">
+    <div style="font-size: 50px; margin-bottom: 15px;" id="hintIcon">💡</div>
+    <div style="font-size: 20px; font-weight: bold; color: #c0392b; margin-bottom: 10px;" id="hintTitle">提示</div>
+    <div style="color: #333; line-height: 1.8;" id="hintText"></div>
+    <button class="btn btn-primary" style="margin-top: 20px;" onclick="closeHintPopup()">
+      知道了！
+    </button>
+  </div>
+
+  <script>
+    // ======================================
+    // 核心模块
+    // ======================================
+    let gameEngine;
+    
+    class Item {
+      constructor(config) {
+        this.id = config.id;
+        this.name = config.name;
+        this.description = config.description;
+        this.icon = config.icon;
+        this.count = 1;
+        this.effect = config.effect;
+      }
+    }
+    
+    class GameEngine {
+      constructor() {
+        this.state = {
+          currentScene: 'start',
+          unlockedScenes: ['start', 'map', 'social_plaza'],
+          gameProgress: 0,
+          selectedItem: null
+        };
+        
+        this.inventory = [];
+        this.allItems = {
+          wisdom_scroll: new Item({
+            id: 'wisdom_scroll',
+            name: '智慧卷轴',
+            icon: '📜',
+            description: '使用后提供3个选项，让你分析判断当前信息的真伪。需要你自己选择答案！'
+          }),
+          truth_badge: new Item({
+            id: 'truth_badge',
+            name: '求真徽章',
+            icon: '🏅',
+            description: '使用后获得一个强有力的提示，但不会直接告诉你答案。你需要根据提示进行思考！'
+          }),
+          protection_shield: new Item({
+            id: 'protection_shield',
+            name: '防护盾',
+            icon: '🛡️',
+            description: '使用后提供多个选项，帮助你识别并保护敏感信息。需要你选择正确的方式！'
+          }),
+          report_kit: new Item({
+            id: 'report_kit',
+            name: '举报工具包',
+            icon: '📦',
+            description: '使用后提供举报流程的选项指引，让你学习正确的举报步骤！'
+          })
+        };
+      }
+      
+      init() {
+        console.log('🎮 游戏引擎初始化完成');
+      }
+      
+      addItem(itemId) {
+        const existing = this.inventory.find(i => i.id === itemId);
+        if (existing) {
+          existing.count++;
+        } else {
+          const item = { ...this.allItems[itemId], count: 1 };
+          this.inventory.push(item);
+        }
+        updateInventoryUI();
+        showToast(`🎁 获得：${this.allItems[itemId].icon} ${this.allItems[itemId].name}`);
+        
+        // 检查收藏家成就
+        if (typeof checkCollectorAchievement === 'function') {
+          checkCollectorAchievement();
+        }
+      }
+      
+      switchScene(sceneId) {
+        this.state.currentScene = sceneId;
+        renderScene(sceneId);
+        
+        if (sceneId !== 'start') {
+          document.getElementById('inventoryBtn').style.display = 'flex';
+        } else {
+          document.getElementById('inventoryBtn').style.display = 'none';
+        }
+      }
+      
+      unlockScene(sceneId) {
+        if (!this.state.unlockedScenes.includes(sceneId)) {
+          this.state.unlockedScenes.push(sceneId);
+          showToast(`🎉 场景解锁：${sceneId}`);
+        }
+        
+        // 检查探索者成就（需要解锁所有5个场景）
+        const requiredScenes = ['social_plaza', 'news_station', 'shopping_mall', 'secret_forum', 'final_showdown'];
+        const allUnlocked = requiredScenes.every(s => this.state.unlockedScenes.includes(s));
+        if (allUnlocked && typeof unlockAchievement === 'function') {
+          unlockAchievement('explorer');
+        }
+      }
+      
+      updateProgress(amount) {
+        this.state.gameProgress = Math.min(100, this.state.gameProgress + amount);
+      }
+    }
+    
+    // ======================================
+    // 背包系统
+    // ======================================
+    function updateInventoryUI() {
+      const count = gameEngine.inventory.reduce((sum, item) => sum + item.count, 0);
+      document.getElementById('inventoryCount').textContent = count;
+      
+      const grid = document.getElementById('itemGrid');
+      const displayItems = [...gameEngine.inventory];
+      
+      while (displayItems.length < 9) {
+        displayItems.push(null);
+      }
+      
+      grid.innerHTML = displayItems.map((item, index) => {
+        if (!item) {
+          return `<div class="item-slot"></div>`;
+        }
+        return `
+          <div class="item-slot has-item" onclick="selectItem(${index})">
+            <div class="item-icon">${item.icon}</div>
+            <div class="item-count">x${item.count}</div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    function openInventory() {
+      document.getElementById('inventoryModal').classList.add('show');
+      updateInventoryUI();
+    }
+    
+    function closeInventory() {
+      document.getElementById('inventoryModal').classList.remove('show');
+      document.getElementById('itemDetail').classList.remove('show');
+    }
+    
+    let selectedInventoryIndex = -1;
+    
+    function selectItem(index) {
+      selectedInventoryIndex = index;
+      const item = gameEngine.inventory[index];
+      if (!item) return;
+      
+      document.getElementById('detailIcon').textContent = item.icon;
+      document.getElementById('detailTitle').textContent = item.name;
+      document.getElementById('detailDesc').textContent = item.description;
+      document.getElementById('itemDetail').classList.add('show');
+    }
+    
+    function useSelectedItem() {
+      if (selectedInventoryIndex < 0) return;
+      
+      const item = gameEngine.inventory[selectedInventoryIndex];
+      if (!item) return;
+      
+      closeInventory();
+      activateItemEffect(item);
+    }
+    
+    function activateItemEffect(item) {
+      switch (item.id) {
+        case 'wisdom_scroll':
+          showWisdomChoice();
+          break;
+        case 'truth_badge':
+          showTruthHint();
+          break;
+        case 'protection_shield':
+          showProtectionChoice();
+          break;
+        case 'report_kit':
+          showReportKitChoice();
+          break;
+      }
+      
+      item.count--;
+      if (item.count <= 0) {
+        gameEngine.inventory.splice(selectedInventoryIndex, 1);
+      }
+      updateInventoryUI();
+    }
+    
+    // ======================================
+    // 道具效果系统
+    // ======================================
+    function showWisdomChoice() {
+      const choices = [
+        { text: 'A. 这个信息看起来是真的', correct: false },
+        { text: 'B. 这个信息可能有问题，需要查证', correct: true },
+        { text: 'C. 不管真假，先转发再说', correct: false }
+      ];
+      
+      showChoiceDialog('📜', '面对网络信息，你的态度是？', choices, (selected, correct) => {
+        if (correct) {
+          showHintPopup('✅', '正确！', '面对网络信息时，保持怀疑态度并查证是明智的选择！');
+        } else {
+          showHintPopup('💡', '提示', '正确的做法是对信息保持怀疑，多方查证，不要轻信或随意转发。');
+        }
+      });
+    }
+    
+    function showTruthHint() {
+      showHintPopup('🏅', '求真提示', 
+        '📌 查证信息真伪的方法：\n\n' +
+        '1. 检查信息来源是否权威\n' +
+        '2. 搜索是否有官方辟谣\n' +
+        '3. 看是否有多个独立信源证实\n' +
+        '4. 注意查看发布时间是否过时'
+      );
+    }
+    
+    function showProtectionChoice() {
+      const choices = [
+        { text: 'A. 这些信息可以公开', correct: false },
+        { text: 'B. 需要对敏感信息进行打码保护', correct: true },
+        { text: 'C. 无所谓，公开没关系', correct: false }
+      ];
+      
+      showChoiceDialog('🛡️', '关于个人信息保护，你的选择是？', choices, (selected, correct) => {
+        if (correct) {
+          showHintPopup('✅', '正确！', '个人信息包括姓名、身份证、电话、地址等，都需要保护！');
+        } else {
+          showHintPopup('💡', '提示', '个人敏感信息必须保护，随意公开可能导致诈骗、骚扰等问题！');
+        }
+      });
+    }
+    
+    function showReportKitChoice() {
+      const choices = [
+        { text: 'A. 直接在评论区骂回去', correct: false },
+        { text: 'B. 收集证据，通过正规渠道举报', correct: true },
+        { text: 'C. 不管它，不理会', correct: false }
+      ];
+      
+      showChoiceDialog('📦', '遇到违法信息，你会怎么做？', choices, (selected, correct) => {
+        if (correct) {
+          showHintPopup('✅', '正确！', '正规举报流程：保存证据 → 选择对应举报类型 → 详细描述 → 提交！');
+        } else {
+          showHintPopup('💡', '提示', '网络不是法外之地，遇到违法信息应该通过正规渠道举报，而不是对骂或忽视！');
+        }
+      });
+    }
+    
+    function showChoiceDialog(icon, question, choices, callback) {
+      document.getElementById('choiceIcon').textContent = icon;
+      document.getElementById('choiceQuestion').textContent = question;
+      
+      const optionsDiv = document.getElementById('choiceOptions');
+      optionsDiv.innerHTML = choices.map((choice, index) => `
+        <div class="choice-option" onclick="selectChoice(${index}, ${choice.correct})">
+          ${choice.text}
+        </div>
+      `).join('');
+      
+      window.choiceCallback = callback;
+      document.getElementById('choiceModal').classList.add('show');
+    }
+    
+    function selectChoice(index, correct) {
+      const options = document.querySelectorAll('.choice-option');
+      options.forEach((opt, i) => {
+        opt.onclick = null;
+        if (i === index) {
+          opt.classList.add(correct ? 'correct' : 'wrong');
+        }
+      });
+      
+      setTimeout(() => {
+        closeChoice();
+        if (window.choiceCallback) {
+          window.choiceCallback(index, correct);
+        }
+      }, 800);
+    }
+    
+    function closeChoice() {
+      document.getElementById('choiceModal').classList.remove('show');
+    }
+    
+    function showHintPopup(icon, title, text) {
+      document.getElementById('hintIcon').textContent = icon;
+      document.getElementById('hintTitle').textContent = title;
+      document.getElementById('hintText').innerHTML = text.replace(/\n/g, '<br>');
+      document.getElementById('hintPopup').classList.add('show');
+    }
+    
+    function closeHintPopup() {
+      document.getElementById('hintPopup').classList.remove('show');
+    }
+    
+    // ======================================
+    // Toast提示
+    // ======================================
+    function showToast(message, duration = 2000) {
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.classList.add('show'), 10);
+      setTimeout(() => { 
+        toast.classList.remove('show'); 
+        setTimeout(() => document.body.removeChild(toast), 300); 
+      }, duration);
+      
+      const style = document.createElement('style');
+      style.textContent = `
+        .toast {
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%) scale(0.8);
+          background: rgba(0,0,0,0.85);
+          color: white;
+          padding: 16px 32px;
+          border-radius: 12px;
+          font-size: 16px;
+          z-index: 9999;
+          opacity: 0;
+          transition: all 0.3s ease;
+          pointer-events: none;
+        }
+        .toast.show {
+          opacity: 1;
+          transform: translate(-50%, -50%) scale(1);
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideUp {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `;
+      if (!document.querySelector('#toast-style')) {
+        style.id = 'toast-style';
+        document.head.appendChild(style);
+      }
+    }
+    
+    // ======================================
+    // 场景渲染
+    // ======================================
+    function renderScene(sceneId) {
+      const container = document.getElementById('game-container');
+      
+      switch(sceneId) {
+        case 'start': renderStartScene(container); break;
+        case 'map': renderMapScene(container); break;
+        case 'social_plaza': renderSocialScene(container); break;
+        case 'news_station': renderNewsScene(container); break;
+        case 'shopping_mall': renderShopScene(container); break;
+        case 'secret_forum': renderForumScene(container); break;
+        case 'final_showdown': renderBossScene(container); break;
+      }
+    }
+    
+    let playerConfig = {
+      name: '清朗特工',
+      avatar: '🕵️',
+      achievements: []
+    };
+    
+    const achievementList = [
+      { id: 'first_report', name: '初次举报', icon: '🏆', desc: '第一次举报不良信息' },
+      { id: 'rumor_slayer', name: '谣言猎人', icon: '⚔️', desc: '举报5条谣言' },
+      { id: 'truth_seeker', name: '真相探索者', icon: '🔍', desc: '使用放大镜/求真徽章/防护盾/举报工具包' },
+      { id: 'collector', name: '收藏家', icon: '🎒', desc: '背包收集3种道具' },
+      { id: 'champion', name: '网络卫士', icon: '👑', desc: '击败谣言之王' },
+      { id: 'explorer', name: '探索者', icon: '🗺️', desc: '解锁所有场景' },
+      { id: 'smart_player', name: '聪明玩家', icon: '🧠', desc: '完成所有选择问题' },
+      { id: 'hero', name: '英雄', icon: '🦸', desc: '完成所有成就' }
+    ];
+    
+    const avatarOptions = [
+      { id: '🕵️', name: '侦探' },
+      { id: '👮', name: '警察' },
+      { id: '🦸', name: '超级英雄' },
+      { id: '🥷', name: '忍者' },
+      { id: '🧙', name: '法师' },
+      { id: '🤖', name: '机器人' }
+    ];
+    
+    let rumorCount = 0;
+    
+    function renderStartScene(container) {
+      container.innerHTML = `
+        <div class="scene-start" style="text-align: center; padding-top: 30px;">
+          <div style="margin-bottom: 30px;">
+            <div id="player-avatar" style="width: 120px; height: 120px; margin: 0 auto 20px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 60px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); cursor: pointer; animation: pulse 2s infinite;" onclick="showAvatarSelector()">
+              ${playerConfig.avatar}
+            </div>
+            <input type="text" id="player-name" value="${playerConfig.name}" 
+                   style="width: 200px; padding: 12px; border: none; border-radius: 10px; text-align: center; font-size: 18px; font-weight: bold; background: rgba(255,255,255,0.9);"
+                   onchange="updatePlayerName()">
+          </div>
+          
+          <h1 style="color: white; font-size: 32px; font-weight: bold; margin-bottom: 10px; text-shadow: 0 2px 10px rgba(0,0,0,0.2);">谣言终结者</h1>
+          <p style="color: rgba(255,255,255,0.9); font-size: 20px; margin-bottom: 10px;">清朗特工</p>
+          <p style="color: rgba(255,255,255,0.8); font-size: 16px; margin-bottom: 30px;">每一件举报，都是共治的力量</p>
+          
+          <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 30px;">
+            <button class="btn btn-icon" onclick="showAchievements()" style="padding: 10px 16px; font-size: 14px; background: rgba(255,255,255,0.2); color: white;">
+              🏅 成就 (${playerConfig.achievements.length}/${achievementList.length})
+            </button>
+            <button class="btn btn-icon" onclick="openInventory()" style="padding: 10px 16px; font-size: 14px; background: rgba(255,255,255,0.2); color: white;">
+              🎒 背包
+            </button>
+          </div>
+          
+          <div style="background: rgba(255,255,255,0.95); border-radius: 16px; padding: 24px; margin-bottom: 30px; text-align: left;">
+            <div style="font-weight: bold; font-size: 18px; margin-bottom: 16px; color: #667eea;">📋 任务简报</div>
+            <p>欢迎加入网络清朗行动！你的任务是：</p>
+            <ul style="margin: 16px 0; padding-left: 24px; line-height: 2.2;">
+              <li>🔍 识别网络谣言</li>
+              <li>📢 举报不良信息</li>
+              <li>🛡️ 保护个人信息</li>
+              <li>✨ 净化网络空间</li>
+            </ul>
+          </div>
+          
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <button class="btn btn-primary btn-large" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); box-shadow: 0 4px 15px rgba(240,147,251,0.4);" onclick="gameEngine.switchScene('map')">
+              🚀 开始行动
+            </button>
+            <button class="btn btn-secondary" style="border: 2px solid #667eea; background: white; color: #667eea;" onclick="showHintPopup('🎮', '新手教程', '1. 点击🎒打开背包\\n2. 点击头像更换角色\\n3. 收集道具解锁成就\\n4. 使用放大镜发现隐藏线索\\n5. 完成所有任务通关！')">
+              📖 游戏教程
+            </button>
+          </div>
+        </div>
+      `;
+    }
+    
+    function showAvatarSelector() {
+      let html = `
+        <div style="text-align: center;">
+          <p style="margin-bottom: 20px;">选择你的特工形象：</p>
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+            ${avatarOptions.map(a => `
+              <div style="padding: 15px; background: ${playerConfig.avatar === a.id ? '#e0e8ff' : '#f8f9fa'}; border-radius: 10px; cursor: pointer; font-size: 36px;" onclick="selectAvatar('${a.id}')">
+                ${a.id}
+                <div style="font-size: 12px; margin-top: 5px;">${a.name}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+      showChoiceDialog('🎭', '选择角色', [{ text: '确定', correct: true }], () => {});
+      
+      setTimeout(() => {
+        document.querySelector('.choice-container').innerHTML = html;
+      }, 50);
+    }
+    
+    function selectAvatar(avatar) {
+      playerConfig.avatar = avatar;
+      document.getElementById('player-avatar').innerHTML = avatar;
+      renderStartScene(document.getElementById('app'));
+    }
+    
+    function updatePlayerName() {
+      playerConfig.name = document.getElementById('player-name').value;
+    }
+    
+    function showAchievements() {
+      let html = '<div style="text-align: center;">';
+      
+      achievementList.forEach(a => {
+        const unlocked = playerConfig.achievements.includes(a.id);
+        html += `
+          <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: ${unlocked ? '#e8f5e9' : '#f0f0f0'}; border-radius: 10px; margin-bottom: 10px;">
+            <span style="font-size: 28px; opacity: ${unlocked ? '1' : '0.3'};">${a.icon}</span>
+            <div style="text-align: left;">
+              <div style="font-weight: bold;">${a.name}</div>
+              <div style="font-size: 12px; color: #666;">${a.desc}</div>
+            </div>
+            ${unlocked ? '<span style="color: #4ade80; font-weight: bold; margin-left: auto;">✅</span>' : '<span style="color: #aaa; margin-left: auto;">🔒</span>'}
+          </div>
+        `;
+      });
+      
+      html += '</div>';
+      
+      showChoiceDialog('🏅', '成就墙', [{ text: '关闭', correct: true }], () => {});
+      
+      setTimeout(() => {
+        document.querySelector('.choice-container').innerHTML = html;
+      }, 50);
+    }
+    
+    function unlockAchievement(id) {
+      if (!playerConfig.achievements.includes(id)) {
+        playerConfig.achievements.push(id);
+        const a = achievementList.find(x => x.id === id);
+        if (a) {
+          showToast(`🏆 解锁成就：${a.name}！`);
+        }
+        
+        // 检查是否完成所有成就
+        if (playerConfig.achievements.length === achievementList.length - 1) {
+          unlockAchievement('hero');
+        }
+      }
+    }
+    
+    // 检查收藏家成就
+    function checkCollectorAchievement() {
+      const itemTypes = new Set();
+      gameEngine.inventory.forEach(item => {
+        itemTypes.add(item.id);
+      });
+      if (itemTypes.size >= 3) {
+        unlockAchievement('collector');
+      }
+    }
+    
+    function renderMapScene(container) {
+      const scenes = [
+        { id: 'social_plaza', name: '社交广场', icon: '🏪', unlocked: true, x: 50, y: 25 },
+        { id: 'news_station', name: '新闻站点', icon: '📰', unlocked: gameEngine.state.unlockedScenes.includes('news_station'), x: 22, y: 45 },
+        { id: 'shopping_mall', name: '购物商城', icon: '🛒', unlocked: gameEngine.state.unlockedScenes.includes('shopping_mall'), x: 78, y: 45 },
+        { id: 'secret_forum', name: '隐秘论坛', icon: '🔮', unlocked: gameEngine.state.unlockedScenes.includes('secret_forum'), x: 50, y: 68 },
+        { id: 'final_showdown', name: '终极对决', icon: '⚔️', unlocked: gameEngine.state.unlockedScenes.includes('final_showdown'), x: 50, y: 92 }
+      ];
+      
+      container.innerHTML = `
+        <div class="scene-map">
+          <h2 style="color: white; font-size: 28px; font-weight: bold; text-align: center; margin-bottom: 20px;">🗺️ 任务地图</h2>
+          
+          <div style="background: rgba(255,255,255,0.2); border-radius: 12px; padding: 16px; margin-bottom: 30px;">
+            <div style="height: 12px; background: rgba(255,255,255,0.3); border-radius: 6px; overflow: hidden; margin-bottom: 8px;">
+              <div style="height: 100%; background: linear-gradient(90deg, #4ade80 0%, #8fd3f4 100%); width: ${gameEngine.state.gameProgress}%; transition: width 0.5s ease;"></div>
+            </div>
+            <div style="text-align: center; color: white; font-weight: 600;">任务进度：${gameEngine.state.gameProgress}%</div>
+          </div>
+          
+          <div style="position: relative; background: rgba(255,255,255,0.1); border-radius: 20px; height: 420px;">
+            ${scenes.map(s => `
+              <div style="position: absolute; left: ${s.x}%; top: ${s.y}%; transform: translate(-50%, -50%); text-align: center; cursor: ${s.unlocked ? 'pointer' : 'not-allowed'}; ${s.unlocked ? 'animation: float 3s ease-in-out infinite;' : 'opacity: 0.5;'}" 
+                   onclick="${s.unlocked ? `gameEngine.switchScene('${s.id}')` : ''}">
+                <div style="font-size: 48px; margin-bottom: 8px; background: white; width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                  ${s.icon}
+                </div>
+                <div style="color: white; font-weight: 600; font-size: 14px;">${s.name}</div>
+                ${!s.unlocked ? '<div style="position: absolute; top: -10px; right: -10px; font-size: 24px;">🔒</div>' : ''}
+              </div>
+            `).join('')}
+          </div>
+          
+          <div style="background: rgba(255,255,255,0.1); border-radius: 16px; padding: 16px; margin-top: 20px; display: flex; justify-content: center; gap: 16px;">
+            <button class="btn btn-icon" style="padding: 10px 16px; font-size: 14px;" onclick="openInventory()">
+              🎒 背包 (${gameEngine.inventory.reduce((sum, i) => sum + i.count, 0)})
+            </button>
+            <button class="btn btn-icon" style="padding: 10px 16px; font-size: 14px;" onclick="showToast('💾 游戏进度已保存！')">
+              💾 保存
+            </button>
+          </div>
+        </div>
+      `;
+    }
+    
+    let socialPosts = [
+      { id: 1, author: '消息通', avatar: '📢', content: '重大消息！今晚24点全市将断网维护，大家提前做好准备！', isRumor: true, hiddenClue: '⚠️ 官方没发布此消息！来源可疑！', comments: [
+        { id: 1, user: '暴躁小王', avatar: '😤', text: '真的假的？太突然了！', bad: false },
+        { id: 2, user: '黑粉头子', avatar: '👿', text: '小编脑子有病吧，这种假消息也发！', bad: true },
+        { id: 3, user: '地域黑', avatar: '😠', text: 'XX地方的人就是爱传谣！', bad: true }
+      ]},
+      { id: 2, author: '热心市民', avatar: '🏠', content: '求帮忙转发！我朋友的孩子走失了...联系方式：13800138000 张三', isSensitive: true, hiddenClue: '⚠️ 泄露个人隐私，小心！', comments: [] },
+      { id: 3, author: '优惠达人', avatar: '🎁', content: '限时特惠！点击链接领取1000元红包：https://fake-url.com/claim', isPhishing: true, hiddenClue: '⚠️ 链接是假的！小心钓鱼！', comments: [] }
+    ];
+    
+    function renderSocialScene(container) {
+      container.innerHTML = `
+        <div style="min-height: 100vh; padding-bottom: 85px;">
+          <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px;">
+            <button style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer;" onclick="gameEngine.switchScene('map')">← 返回</button>
+            <h2 style="color: white; font-size: 24px; margin: 0;">🏪 社交广场</h2>
+          </div>
+          
+          <div style="background: rgba(255,255,255,0.95); border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+            <p><strong>💡 探索提示：</strong>使用🔍放大镜发现隐藏线索！</p>
+          </div>
+          
+          <div id="socialPosts">
+            ${socialPosts.map(post => `
+              <div class="post-card" id="post-${post.id}" style="background: white; border-radius: 16px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.08);">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                  <span style="font-size: 28px;">${post.avatar}</span>
+                  <span style="font-weight: bold;">${post.author}</span>
+                  ${post.isRumor ? '<span style="background: #ffd700; color: #333; padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: bold;">⚠️ 可疑</span>' : ''}
+                </div>
+                <div id="post-content-${post.id}" style="line-height: 1.7; margin-bottom: 16px; position: relative;">
+                  ${post.content}
+                </div>
+                
+                <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
+                  <button style="padding: 10px 16px; background: #fff9c4; border: 2px solid #ffd700; border-radius: 8px; cursor: pointer; font-weight: bold;" onclick="useMagnifier(${post.id})">🔍 真相放大镜</button>
+                  <button style="padding: 10px 16px; background: #f0f4ff; border: none; border-radius: 8px; cursor: pointer;" onclick="investigateSocialPost(${post.id})">� 调查</button>
+                  <button style="padding: 10px 16px; background: #fee2e2; border: none; border-radius: 8px; cursor: pointer;" onclick="reportSocialPost(${post.id})">📢 举报</button>
+                  <button style="padding: 10px 16px; background: #e8f5e9; border: none; border-radius: 8px; cursor: pointer;" onclick="gameEngine.addItem('wisdom_scroll')">📎 收集</button>
+                </div>
+                
+                ${post.comments.length > 0 ? `
+                  <div style="border-top: 1px solid #eee; padding-top: 16px;">
+                    <div style="font-weight: bold; margin-bottom: 12px;">💬 评论区</div>
+                    ${post.comments.map(c => `
+                      <div id="comment-${c.id}" style="display: flex; align-items: flex-start; gap: 10px; padding: 12px; background: ${c.bad ? '#fff1f0' : '#f8f9fa'}; border-radius: 8px; margin-bottom: 8px;">
+                        <span style="font-size: 20px;">${c.avatar}</span>
+                        <span style="font-weight: bold;">${c.user}</span>
+                        <span style="flex: 1;">${c.text}</span>
+                        ${c.bad ? `<button style="padding: 4px 12px; background: #f5576c; color: white; border: none; border-radius: 6px; cursor: pointer;" onclick="reportSocialComment(${c.id})">举报</button>` : ''}
+                      </div>
+                    `).join('')}
+                  </div>
+                ` : ''}
+              </div>
+            `).join('')}
+          </div>
+          
+          <div style="position: fixed; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); padding: 16px;">
+            <button style="width: 100%; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer;" onclick="completeSocialScene()">
+              ✅ 完成广场任务
+            </button>
+          </div>
+        </div>
+      `;
+    }
+    
+    function useMagnifier(postId) {
+      unlockAchievement('truth_seeker');
+      const post = socialPosts.find(p => p.id === postId);
+      
+      if (post && post.hiddenClue) {
+        showHintPopup('🔍', '发现隐藏线索！', post.hiddenClue);
+        
+        const contentEl = document.getElementById(`post-content-${postId}`);
+        contentEl.style.animation = 'pulse 0.5s';
+        contentEl.style.background = '#fff9c4';
+        
+        setTimeout(() => {
+          contentEl.style.background = 'none';
+        }, 2000);
+      } else {
+        showToast('🔍 这里没有发现线索...');
+      }
+    }
+    
+    function investigateSocialPost(id) {
+      const post = socialPosts.find(p => p.id === id);
+      const el = document.getElementById(`post-${id}`);
+      
+      if (post.isRumor) {
+        showChoiceDialog('🔍', '这是一条什么信息？', [
+          { text: 'A. 真实新闻', correct: false },
+          { text: 'B. 网络谣言', correct: true },
+          { text: 'C. 不确定', correct: false }
+        ], (selected, correct) => {
+          if (correct) {
+            el.style.borderLeft = '4px solid #f5576c';
+            gameEngine.addItem('truth_badge');
+          }
+        });
+      } else if (post.isPhishing) {
+        showToast('⚠️ 这是钓鱼链接！不要点击！');
+        el.style.borderLeft = '4px solid #ffa502';
+      } else if (post.isSensitive) {
+        showChoiceDialog('🛡️', '这里面有什么需要保护的？', [
+          { text: 'A. 没有敏感信息', correct: false },
+          { text: 'B. 有个人联系方式', correct: true },
+          { text: 'C. 信息都可以公开', correct: false }
+        ], (selected, correct) => {
+          if (correct) {
+            el.style.borderLeft = '4px solid #ffc107';
+            gameEngine.addItem('protection_shield');
+          }
+        });
+      }
+    }
+    
+    function reportSocialPost(id) {
+      unlockAchievement('first_report');
+      rumorCount++;
+      
+      if (rumorCount >= 5) {
+        unlockAchievement('rumor_slayer');
+      }
+      
+      const el = document.getElementById(`post-${id}`);
+      el.style.opacity = '0.3';
+      showToast('✅ 举报成功！');
+      gameEngine.updateProgress(8);
+    }
+    
+    function reportSocialComment(id) {
+      unlockAchievement('first_report');
+      const el = document.getElementById(`comment-${id}`);
+      el.style.opacity = '0.3';
+      el.style.textDecoration = 'line-through';
+      showToast('✅ 评论已举报！');
+    }
+    
+    function completeSocialScene() {
+      gameEngine.unlockScene('news_station');
+      gameEngine.updateProgress(12);
+      gameEngine.switchScene('map');
+    }
+    
+    let newsArticles = [
+      { id: 1, source: '网络快讯', sourceIcon: '📱', title: '震惊！某著名保健品可治愈癌症，已有万人验证！', content: '近日一款"神丹妙药"保健品疯传，称可治愈晚期癌症，治愈率98%！', type: 'fake-news', issues: ['虚假医药宣传', '无科学依据', '可能延误治疗'], hiddenTip: '🏅 使用求真徽章仔细分析，没有官方认证！' },
+      { id: 2, source: '权威新闻', sourceIcon: '📰', title: '我市举办网络安全宣传周活动', content: '为提升市民网络安全意识，我市启动网络安全宣传周活动。', type: 'real', issues: [], hiddenTip: '✅ 这是真实新闻，有官方来源！' },
+      { id: 3, source: '猎奇资讯', sourceIcon: '😱', title: '深夜实拍！某公园出现神秘生物，是外星人吗？', content: '网友拍到神秘生物，专家分析可能是外星生命！大家晚上别出门！', type: 'clickbait', issues: ['标题党', '虚假图片', '制造恐慌'], hiddenTip: '🏅 使用求真徽章，发现图片是PS的！' }
+    ];
+    
+    function renderNewsScene(container) {
+      container.innerHTML = `
+        <div style="min-height: 100vh; padding-bottom: 85px;">
+          <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px;">
+            <button style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer;" onclick="gameEngine.switchScene('map')">← 返回</button>
+            <h2 style="color: white; font-size: 24px; margin: 0;">📰 新闻站点</h2>
+          </div>
+          
+          <div style="background: rgba(255,255,255,0.95); border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+            <p><strong>💡 任务提示：</strong>使用🏅求真徽章来发现隐藏线索，做出正确判断！</p>
+          </div>
+          
+          ${newsArticles.map(article => `
+            <div class="news-article ${article.type}" id="news-${article.id}">
+              <div class="news-header">
+                <span style="font-size: 28px;">${article.sourceIcon}</span>
+                <div style="display: flex; align-items: center; gap: 8px; color: #666; font-size: 14px;">
+                  <strong>${article.source}</strong>
+                </div>
+              </div>
+              <h3 class="news-title">${article.title}</h3>
+              <p id="news-content-${article.id}" class="news-content">${article.content}</p>
+              
+              ${article.issues.length > 0 ? `
+                <div class="warning-zone">
+                  <strong>⚠️ 可能存在的问题：</strong>
+                  <ul style="margin-top: 8px; padding-left: 20px;">
+                    ${article.issues.map(i => `<li>${i}</li>`).join('')}
+                  </ul>
+                </div>
+              ` : ''}
+              
+              <div style="display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap;">
+                <button style="padding: 12px 16px; background: #e3f2fd; border: 2px solid #2196f3; border-radius: 8px; cursor: pointer; font-weight: bold;" onclick="useTruthBadge(${article.id})">🏅 求真徽章</button>
+                <button class="btn btn-secondary" style="flex: 1; padding: 12px; border: 2px solid #667eea; border-radius: 8px; background: white; color: #667eea; cursor: pointer;" onclick="checkNewsArticle(${article.id})">🔍 鉴定真伪</button>
+                ${article.type !== 'real' ? `<button class="btn btn-primary" style="flex: 1; padding: 12px; border: none; border-radius: 8px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; cursor: pointer;" onclick="reportNewsArticle(${article.id})">📢 举报</button>` : ''}
+                <button style="padding: 12px; background: #e8f5e9; border: none; border-radius: 8px; cursor: pointer;" onclick="gameEngine.addItem('report_kit')">📎</button>
+              </div>
+            </div>
+          `).join('')}
+          
+          <div style="position: fixed; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); padding: 16px;">
+            <button style="width: 100%; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer;" onclick="completeNewsScene()">
+              ✅ 完成新闻任务
+            </button>
+          </div>
+        </div>
+      `;
+    }
+    
+    function useTruthBadge(articleId) {
+      unlockAchievement('truth_seeker');
+      const article = newsArticles.find(a => a.id === articleId);
+      
+      if (article && article.hiddenTip) {
+        showHintPopup('🏅', '求真徽章分析完成！', article.hiddenTip);
+        
+        const contentEl = document.getElementById(`news-content-${articleId}`);
+        contentEl.style.background = '#e8f5e9';
+        contentEl.style.padding = '10px';
+        contentEl.style.borderRadius = '8px';
+        
+        gameEngine.addItem('truth_badge');
+      } else {
+        showToast('🏅 没有发现异常...');
+      }
+    }
+    
+    function checkNewsArticle(id) {
+      const article = newsArticles.find(a => a.id === id);
+      
+      if (article.type === 'fake-news') {
+        showChoiceDialog('🔬', '这条新闻是？', [
+          { text: 'A. 真实新闻', correct: false },
+          { text: 'B. 虚假新闻', correct: true },
+          { text: 'C. 不知道', correct: false }
+        ], (selected, correct) => {
+          if (correct) {
+            showHintPopup('✅', '正确！', '这是虚假医药广告，没有科学依据，可能延误治疗！');
+            gameEngine.addItem('truth_badge');
+          }
+        });
+      } else if (article.type === 'clickbait') {
+        showChoiceDialog('🎭', '这篇文章属于？', [
+          { text: 'A. 深度报道', correct: false },
+          { text: 'B. 标题党', correct: true },
+          { text: 'C. 科普文章', correct: false }
+        ], (selected, correct) => {
+          if (correct) {
+            showHintPopup('✅', '正确！', '这是典型的标题党，制造恐慌吸引眼球！');
+            gameEngine.addItem('wisdom_scroll');
+          }
+        });
+      } else {
+        showToast('✅ 这是真实新闻！');
+      }
+    }
+    
+    function reportNewsArticle(id) {
+      const el = document.getElementById(`news-${id}`);
+      el.style.opacity = '0.3';
+      showToast('✅ 举报成功！已移交网信部门！');
+      gameEngine.updateProgress(10);
+    }
+    
+    function completeNewsScene() {
+      gameEngine.unlockScene('shopping_mall');
+      gameEngine.updateProgress(15);
+      gameEngine.switchScene('map');
+    }
+    
+    let shopProducts = [
+      { id: 1, image: '💎', title: '【限量】钻石项链 原价9999 现价99', price: 99, originalPrice: 9999, seller: '海外代购', isScam: true, warnings: ['价格异常低廉', '无正规销售资质', '可能是假冒产品'], hiddenTip: '🛡️ 防护盾发现：没有营业执照！' },
+      { id: 2, image: '📱', title: '官方正品 手机旗舰店', price: 3999, originalPrice: 4299, seller: '品牌旗舰店', isScam: false, warnings: [], hiddenTip: '🛡️ 防护盾认证：正规商家！' },
+      { id: 3, image: '🎫', title: '演唱会门票 一折转让', price: 180, originalPrice: 1800, seller: '个人转让', isScam: true, warnings: ['场外交易风险', '可能是假票', '点击链接有风险'], hiddenTip: '🛡️ 防护盾警告：要求先付款！' }
+    ];
+    
+    function renderShopScene(container) {
+      container.innerHTML = `
+        <div style="min-height: 100vh; padding-bottom: 85px;">
+          <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px;">
+            <button style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer;" onclick="gameEngine.switchScene('map')">← 返回</button>
+            <h2 style="color: white; font-size: 24px; margin: 0;">🛒 购物商城</h2>
+          </div>
+          
+          <div style="background: rgba(255,255,255,0.95); border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+            <p><strong>💡 任务提示：</strong>使用🛡️防护盾扫描商品，发现隐藏风险！</p>
+          </div>
+          
+          ${shopProducts.map(product => `
+            <div id="shop-${product.id}" style="background: white; border-radius: 16px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); ${product.isScam ? 'border: 2px dashed #ffa502;' : ''}">
+              <div style="display: flex; gap: 16px; margin-bottom: 16px;">
+                <div style="width: 100px; height: 100px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 48px; color: white; flex-shrink: 0;">
+                  ${product.image}
+                </div>
+                <div style="flex: 1;">
+                  <div style="font-size: 18px; font-weight: bold; margin-bottom: 8px;">${product.title}</div>
+                  <div style="color: #888; font-size: 14px; margin-bottom: 8px;">🏪 ${product.seller}</div>
+                  <div>
+                    <span style="font-size: 24px; color: #f5576c; font-weight: bold;">¥${product.price}</span>
+                    <span style="color: #888; text-decoration: line-through; margin-left: 8px;">¥${product.originalPrice}</span>
+                    <span style="background: #f5576c; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; margin-left: 8px;">0.9折</span>
+                  </div>
+                </div>
+              </div>
+              
+              ${product.warnings.length > 0 ? `
+                <div class="warning-zone">
+                  <strong>⚠️ 风险提示：</strong>
+                  <ul style="margin-top: 8px; padding-left: 20px; color: #856404;">
+                    ${product.warnings.map(w => `<li>${w}</li>`).join('')}
+                  </ul>
+                </div>
+              ` : ''}
+              
+              <div style="display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap;">
+                <button style="padding: 12px 16px; background: #f0f9ff; border: 2px solid #4ade80; border-radius: 8px; cursor: pointer; font-weight: bold;" onclick="useProtectionShield(${product.id})">🛡️ 防护盾扫描</button>
+                <button class="btn btn-secondary" style="flex: 1; border: 2px solid #667eea; border-radius: 8px; background: white; color: #667eea; cursor: pointer;" onclick="checkShopProduct(${product.id})">🔍 风险检测</button>
+                ${product.isScam ? `<button class="btn btn-primary" style="flex: 1; border: none; border-radius: 8px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; cursor: pointer;" onclick="reportShopProduct(${product.id})">📢 举报诈骗</button>` : `<button class="btn btn-secondary" style="flex: 1; border: 2px solid #4ade80; border-radius: 8px; background: white; color: #4ade80; cursor: pointer;" onclick="showToast('✅ 这个商品很安全')">✅ 安全</button>`}
+              </div>
+            </div>
+          `).join('')}
+          
+          <div style="position: fixed; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); padding: 16px;">
+            <button style="width: 100%; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer;" onclick="completeShopScene()">
+              ✅ 完成商城任务
+            </button>
+          </div>
+        </div>
+      `;
+    }
+    
+    function useProtectionShield(productId) {
+      unlockAchievement('truth_seeker');
+      const product = shopProducts.find(p => p.id === productId);
+      
+      if (product && product.hiddenTip) {
+        showHintPopup('🛡️', '防护盾扫描完成！', product.hiddenTip);
+        
+        const productEl = document.getElementById(`shop-${productId}`);
+        if (product.isScam) {
+          productEl.style.background = '#fff5f5';
+          productEl.style.border = '2px solid #f5576c';
+        } else {
+          productEl.style.background = '#f0fff4';
+        }
+        
+        gameEngine.addItem('protection_shield');
+      }
+    }
+    
+    function checkShopProduct(id) {
+      const product = shopProducts.find(p => p.id === id);
+      
+      if (product.isScam) {
+        showChoiceDialog('⚠️', '这个商品？', [
+          { text: 'A. 太便宜了，立即购买', correct: false },
+          { text: 'B. 价格异常，有风险', correct: true },
+          { text: 'C. 先问清楚再说', correct: false }
+        ], (selected, correct) => {
+          if (correct) {
+            showHintPopup('✅', '正确！', '价格异常低的商品很可能是陷阱！');
+            gameEngine.addItem('protection_shield');
+          }
+        });
+      } else {
+        showToast('✅ 这个商品很安全！');
+      }
+    }
+    
+    function reportShopProduct(id) {
+      const el = document.getElementById(`shop-${id}`);
+      el.style.opacity = '0.3';
+      showToast('✅ 举报成功！已提交市场监管部门！');
+      gameEngine.updateProgress(10);
+    }
+    
+    function completeShopScene() {
+      gameEngine.unlockScene('secret_forum');
+      gameEngine.updateProgress(15);
+      gameEngine.switchScene('map');
+    }
+    
+    let forumPosts = [
+      { id: 1, avatar: '🎭', author: '匿名用户1', content: '教大家一个方法，利用系统漏洞可以免费充值游戏币，需要的私我！', isDangerous: true, hiddenReport: '📦 建议举报类型：黑客攻击/非法牟利' },
+      { id: 2, avatar: '💻', author: '技术爱好者', content: '分享一个我写的Python自动化脚本，大家一起学习交流！', isDangerous: false, hiddenReport: '✅ 正常内容，无需举报' },
+      { id: 3, avatar: '😈', author: '神秘人X', content: '这里有最新的明星隐私照片和视频，50元一套，要的加QQ！', isDangerous: true, hiddenReport: '📦 建议举报类型：侵犯隐私/非法交易' }
+    ];
+    
+    function renderForumScene(container) {
+      container.innerHTML = `
+        <div style="min-height: 100vh; padding-bottom: 85px; background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);">
+          <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px;">
+            <button style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer;" onclick="gameEngine.switchScene('map')">← 返回</button>
+            <h2 style="color: #4ade80; font-size: 24px; margin: 0;">🔮 隐秘论坛</h2>
+          </div>
+          
+          <div style="background: rgba(255,255,255,0.1); border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+            <p style="color: #aaa;"><strong>🔍 任务提示：</strong>使用📦举报工具包，选择正确的举报类型！</p>
+          </div>
+          
+          ${forumPosts.map(post => `
+            <div id="forum-post-${post.id}" style="background: #2a2a3e; border-radius: 12px; padding: 16px; margin-bottom: 16px; color: #e0e0e0; ${post.isDangerous ? 'border: 2px dashed #f5576c;' : ''}">
+              <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                <div style="width: 40px; height: 40px; background: #667eea; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px;">
+                  ${post.avatar}
+                </div>
+                <div style="color: #4ade80; font-weight: bold;">${post.author}</div>
+              </div>
+              <div style="line-height: 1.6; margin-bottom: 12px;">${post.content}</div>
+              
+              ${post.isDangerous ? `
+                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                  <button style="padding: 10px 16px; background: #fff8e1; border: 2px solid #ff9800; border-radius: 8px; cursor: pointer; font-weight: bold; color: #333;" onclick="useReportKit(${post.id})">📦 举报工具包</button>
+                  <button style="flex: 1; padding: 10px; background: #fee2e2; color: #dc2626; border: none; border-radius: 8px; cursor: pointer;" onclick="reportForumPost(${post.id})">📢 举报违法内容</button>
+                  <button style="padding: 10px 16px; background: rgba(255,255,255,0.1); color: white; border: none; border-radius: 8px; cursor: pointer;" onclick="gameEngine.addItem('report_kit')">📎</button>
+                </div>
+              ` : `
+                <div style="display: flex; gap: 12px;">
+                  <button style="flex: 1; padding: 10px; background: rgba(255,255,255,0.1); color: white; border: none; border-radius: 8px; cursor: pointer;" onclick="showToast('✅ 这个帖子没问题')">✅ 正常内容</button>
+                </div>
+              `}
+            </div>
+          `).join('')}
+          
+          <div style="position: fixed; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.9); padding: 16px;">
+            <button style="width: 100%; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer;" onclick="completeForumScene()">
+              ✅ 完成论坛巡查
+            </button>
+          </div>
+        </div>
+      `;
+    }
+    
+    function useReportKit(postId) {
+      unlockAchievement('truth_seeker');
+      const post = forumPosts.find(p => p.id === postId);
+      
+      if (post && post.hiddenReport) {
+        showHintPopup('📦', '举报工具包分析完成！', post.hiddenReport);
+        
+        const postEl = document.getElementById(`forum-post-${postId}`);
+        postEl.style.background = '#1a1a2e';
+        postEl.style.border = '2px solid #4ade80';
+        
+        gameEngine.addItem('report_kit');
+      }
+    }
+    
+    function reportForumPost(id) {
+      const el = document.getElementById(`forum-post-${id}`);
+      el.style.opacity = '0.3';
+      showToast('✅ 举报成功！已提交公安部门！');
+      gameEngine.updateProgress(12);
+    }
+    
+    function completeForumScene() {
+      gameEngine.unlockScene('final_showdown');
+      gameEngine.updateProgress(15);
+      gameEngine.switchScene('map');
+    }
+    
+    let bossHP = 100;
+    let maxBossHP = 100;
+    
+    function renderBossScene(container) {
+      container.innerHTML = `
+        <div class="boss-arena">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <h1 style="color: white; font-size: 28px; margin-bottom: 8px;">⚔️ 终极对决</h1>
+            <p style="color: #aaa;">击败谣言之王，净化网络空间！</p>
+          </div>
+          
+          <div class="boss-container">
+            <div class="boss-avatar" id="boss-avatar">👹</div>
+            <h2 style="color: white; font-size: 24px; margin-bottom: 16px;">谣言之王</h2>
+            <div class="hp-bar-container">
+              <div class="hp-bar" id="hp-bar" style="width: 100%;">
+                <span id="hp-text">100 / 100</span>
+              </div>
+            </div>
+          </div>
+          
+          <div style="text-align: center; color: white; margin-bottom: 20px;">
+            <p>🤖 使用道具攻击谣言之王！</p>
+          </div>
+          
+          <div class="attack-zone">
+            <div class="attack-card" onclick="useBossAttack('wisdom_scroll')">
+              <div class="attack-icon">📜</div>
+              <div class="attack-name">智慧卷轴</div>
+              <div style="color: #4ade80; font-size: 13px;">伤害：20</div>
+            </div>
+            <div class="attack-card" onclick="useBossAttack('truth_badge')">
+              <div class="attack-icon">🏅</div>
+              <div class="attack-name">求真徽章</div>
+              <div style="color: #4ade80; font-size: 13px;">伤害：25</div>
+            </div>
+            <div class="attack-card" onclick="useBossAttack('protection_shield')">
+              <div class="attack-icon">🛡️</div>
+              <div class="attack-name">防护盾</div>
+              <div style="color: #4ade80; font-size: 13px;">伤害：30</div>
+            </div>
+            <div class="attack-card" onclick="useBossAttack('report_kit')">
+              <div class="attack-icon">📦</div>
+              <div class="attack-name">举报工具包</div>
+              <div style="color: #4ade80; font-size: 13px;">伤害：35</div>
+            </div>
+          </div>
+          
+          <div class="combat-log" id="combat-log">
+            <div class="log-entry">⚔️ 对决开始！谣言之王出现了！</div>
+          </div>
+          
+          <button class="btn btn-secondary" style="width: 100%; margin-top: 20px;" onclick="gameEngine.switchScene('map')">← 暂时撤退</button>
+        </div>
+      `;
+    }
+    
+    function useBossAttack(itemType) {
+      let damage = 0;
+      let attackName = '';
+      
+      switch(itemType) {
+        case 'wisdom_scroll': damage = 20; attackName = '📜 智慧卷轴'; break;
+        case 'truth_badge': damage = 25; attackName = '🏅 求真徽章'; break;
+        case 'protection_shield': damage = 30; attackName = '🛡️ 防护盾'; break;
+        case 'report_kit': damage = 35; attackName = '📦 举报工具包'; break;
+      }
+      
+      bossHP = Math.max(0, bossHP - damage);
+      updateBossHP();
+      addCombatLog(attackName + ' 造成 ' + damage + ' 点伤害！');
+      
+      const avatar = document.getElementById('boss-avatar');
+      avatar.classList.add('damaged');
+      setTimeout(() => avatar.classList.remove('damaged'), 600);
+      
+      if (bossHP <= 0) {
+        setTimeout(() => bossVictory(), 1500);
+      } else {
+        setTimeout(() => bossCounterAttack(), 800);
+      }
+    }
+    
+    function bossCounterAttack() {
+      const attacks = [
+        '👹 谣言之王释放了虚假信息！',
+        '😈 谣言之王使用了网络暴力！',
+        '🔥 谣言之王发起了恐慌谣言！'
+      ];
+      const attack = attacks[Math.floor(Math.random() * attacks.length)];
+      addCombatLog(attack);
+    }
+    
+    function updateBossHP() {
+      const hpBar = document.getElementById('hp-bar');
+      const hpText = document.getElementById('hp-text');
+      hpBar.style.width = `${bossHP}%`;
+      hpText.textContent = `${bossHP} / ${maxBossHP}`;
+      
+      if (bossHP <= 30) {
+        hpBar.style.background = 'linear-gradient(90deg, #f5576c, #f093fb)';
+      }
+    }
+    
+    function addCombatLog(text) {
+      const log = document.getElementById('combat-log');
+      const entry = document.createElement('div');
+      entry.className = 'log-entry';
+      entry.textContent = text;
+      log.insertBefore(entry, log.firstChild);
+    }
+    
+    function bossVictory() {
+      unlockAchievement('champion');
+      addCombatLog('🎉 胜利！谣言之王被击败了！');
+      
+      setTimeout(() => {
+        gameEngine.updateProgress(100);
+        
+        const container = document.getElementById('game-container');
+        container.innerHTML = `
+          <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; text-align: center; padding: 20px;">
+            <div style="background: white; border-radius: 24px; padding: 40px; max-width: 420px; width: 100%;">
+              <div style="font-size: 80px; margin-bottom: 20px;">🏆</div>
+              <h1 style="color: #667eea; font-size: 32px; margin-bottom: 16px;">恭喜通关！</h1>
+              <p style="color: #666; margin-bottom: 24px;">${playerConfig.name}，你已成功击败谣言之王！</p>
+              
+              <div style="background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); border-radius: 16px; padding: 24px; margin-bottom: 24px;">
+                <h3 style="color: #c0392b; margin-bottom: 16px;">📜 荣誉证书</h3>
+                <p style="color: #333; line-height: 1.8;">
+                  ${playerConfig.avatar} ${playerConfig.name}同志：<br><br>
+                  在本次"清朗行动"中表现优异，成功完成各项任务，为净化网络空间作出重要贡献。<br><br>
+                  特授予"网络清朗卫士"称号！
+                </p>
+              </div>
+              
+              <div style="display: flex; gap: 12px;">
+                <button class="btn btn-secondary" style="flex: 1;" onclick="location.reload()">🔄 重新挑战</button>
+                <button class="btn btn-primary" style="flex: 1;" onclick="showToast('📸 证书已保存！'); setTimeout(() => location.reload(), 1500);">💾 保存证书</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }, 1500);
+    }
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      gameEngine = new GameEngine();
+      gameEngine.init();
+      gameEngine.switchScene('start');
+      console.log('🎮 谣言终结者已启动！');
+    });
+  </script>
+</body>
+</html>
